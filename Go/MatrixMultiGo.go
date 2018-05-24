@@ -13,12 +13,6 @@ import (
 	"time"
 )
 
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
 func multiply(A [][]int, B [][]int) [][]int {
 
 	sizeA := len(A)
