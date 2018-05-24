@@ -2,7 +2,7 @@ import random
 random.seed(1234)
 
 def createRandomMatrix(n):
-    maxVal = 1000 # I don't want to get Java / C++ into trouble
+    maxVal = 1000
     matrix = []
     for i in range(n):
         matrix.append([random.randint(0,maxVal) for el in range(n)])
