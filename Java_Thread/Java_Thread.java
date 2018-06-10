@@ -15,7 +15,6 @@ public class Java_Thread {
         try {
             BufferedReader br = new BufferedReader(new FileReader(filename));
 
-            // Begin reading A
             while ((thisLine = br.readLine()) != null) {
                 if (thisLine.trim().equals("")) {
                     break;
@@ -29,7 +28,6 @@ public class Java_Thread {
                 }
             }
 
-            // Begin reading B
             while ((thisLine = br.readLine()) != null) {
                 ArrayList<Integer> line = new ArrayList<Integer>();
                 String[] lineArray = thisLine.split("\t");
@@ -50,7 +48,6 @@ public class Java_Thread {
     }
 
     public int[][] matrixMultiplication(ArrayList<ArrayList<Integer>> A, ArrayList<ArrayList<Integer>> B, int m, int n) {
-        // initialise C
         int[][] C = new int[m][n];
 
         for (int i = 0; i < m; i++) {
@@ -65,31 +62,15 @@ public class Java_Thread {
         return C;
     }
 
-    public ArrayList<ArrayList<Integer>> splitMatrix(ArrayList<ArrayList<Integer>> A, int threadNr, int nrOfThreads) {
+    public ArrayList<ArrayList<ArrayList<Integer>>> splitMatrix(ArrayList<ArrayList<Integer>> A, int nrOfThreads) {
         int n = A.size();
         int m = n / nrOfThreads;
-        ArrayList<ArrayList<Integer>> B = new ArrayList<ArrayList<Integer>>();
+        ArrayList<ArrayList<ArrayList<Integer>>> B = new ArrayList<ArrayList<ArrayList<Integer>>>();
 
-        for (int i = threadNr * m; i < threadNr * m + m; i++) {
-            B.add(A.get(i));
+        for (int i = 0; i < nrOfThreads; i++){
+            B.add(new ArrayList<ArrayList<Integer>>(A.subList(i*m, (i+1)*m)));
         }
         return B;
-    }
-
-    public void printMatrix(int[][] matrix) {
-        for (int[] line : matrix) {
-            int i = 0;
-            StringBuilder sb = new StringBuilder(matrix.length);
-            for (int number : line) {
-                if (i != 0) {
-                    sb.append("\t");
-                } else {
-                    i++;
-                }
-                sb.append(number);
-            }
-            System.out.println(sb.toString());
-        }
     }
 
     public static void main(String[] args) {
@@ -113,15 +94,11 @@ public class Java_Thread {
         ArrayList<ArrayList<Integer>> A = matrices.get(0);
         ArrayList<ArrayList<Integer>> B = matrices.get(1);
 
-        // Check input nr of threads
         if (nrOfThreads <= 0) {
-            // Start multiplication without multithreading
             int n = A.size();
             long startTime = System.nanoTime();
             int[][] C = matrixMultiplication(A, B, n, n);
             long endTime = System.nanoTime();
-            
-            //printMatrix(C);
             
             System.out.println("Execution took " + (endTime - startTime) + " ns");
         } else {
@@ -129,23 +106,23 @@ public class Java_Thread {
                 System.out.println("Size of matrix is not divisible by the supplied number of threads");
                 System.exit(1);
             }
-            // Create submatrixes and threads
             ArrayList<Worker> threads = new ArrayList<Worker>();
             ArrayList<int[][]> result = new ArrayList<int[][]>();
             int[][] empty = new int[][]{{}};
 
             for (int i = 0; i < nrOfThreads; i++) {
-                threads.add(new Worker(splitMatrix(A, i, nrOfThreads), B, i, result));
                 result.add(empty);
             }
 
-            // Start threads
+            ArrayList<ArrayList<ArrayList<Integer>>> workerMatrices = splitMatrix(A, nrOfThreads);
+
             long startTime = System.nanoTime();
+
             for (int i = 0; i < nrOfThreads; i++) {
+                threads.add(new Worker(workerMatrices.get(i), B, i, result));
                 threads.get(i).start();
             }
 
-            // Wait for threads to die
             for (int i = 0; i < nrOfThreads; i++) {
                 try {
                     threads.get(i).join();
@@ -155,10 +132,6 @@ public class Java_Thread {
             }
             long endTime = System.nanoTime();
 
-            // for (int[][] matrix : result) {
-            //     printMatrix(matrix);
-            //     System.out.println("\n");
-            // }
             System.out.println("Execution took " + (endTime - startTime) + " ns");
         }
     }
